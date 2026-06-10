@@ -94,21 +94,25 @@ function Shell({ children, title, logout }) {
 function AdminDashboard({ logout }) {
   const [stats, setStats] = React.useState({});
   const [companies, setCompanies] = React.useState([]);
-  const [users, setUsers] = React.useState([]);
+  //const [users, setUsers] = React.useState([]);
   const [invoices, setInvoices] = React.useState([]);
   const [bookings, setBookings] = React.useState([]);
   const [companyForm, setCompanyForm] = React.useState({ name: "", email: "", ownerName: "", seatCount: 39 });
   const [invoiceForm, setInvoiceForm] = React.useState({ companyId: "", billingMonth: firstOfMonth(), dueDate: "", sendNow: true });
   const [message, setMessage] = React.useState("");
   const [error, setError] = React.useState("");
+  const [activeMenu, setActiveMenu] = React.useState("dashboard");
   const selectedCompany = companies.find((c) => String(c.id) === String(invoiceForm.companyId));
 
   const load = async () => {
-    const [s, c, u, i, b] = await Promise.all([
-      request("/admin/dashboard"), request("/admin/companies"), request("/admin/companies/users"),
+    const [s, c,i, b] = await Promise.all([
+      request("/admin/dashboard"), request("/admin/companies"), 
+      //request("/admin/companies/users"),
       request("/admin/invoices"), request("/admin/bookings")
     ]);
-    setStats(s); setCompanies(c); setUsers(u); setInvoices(i); setBookings(b);
+    setStats(s); setCompanies(c);
+    // setUsers(u); 
+    setInvoices(i); setBookings(b);
     if (!invoiceForm.companyId && c[0]) setInvoiceForm((f) => ({ ...f, companyId: c[0].id }));
   };
   React.useEffect(() => { load(); }, []);
@@ -146,51 +150,248 @@ function AdminDashboard({ logout }) {
   };
 
   return (
-    <Shell title="Admin Dashboard" logout={logout}>
-      <div className="stats">
-        <Metric label="Companies" value={stats.companies || 0} />
-        <Metric label="Paid bills" value={stats.paidBills || 0} />
-        <Metric label="Pending bills" value={stats.pendingBills || 0} />
-        <Metric label="Bookings" value={stats.totalBookings || 0} />
+  <div className="dashboard-layout">
+
+    <aside className="sidebar">
+      <div className="brand">
+        <Building2 />
+        <span>Workafella</span>
       </div>
+
+      <button
+        className={activeMenu === "dashboard" ? "nav active" : "nav"}
+        onClick={() => setActiveMenu("dashboard")}
+      >
+        Dashboard
+      </button>
+
+      <button
+        className={activeMenu === "companies" ? "nav active" : "nav"}
+        onClick={() => setActiveMenu("companies")}
+      >
+        Companies
+      </button>
+
+      <button
+        className={activeMenu === "invoices" ? "nav active" : "nav"}
+        onClick={() => setActiveMenu("invoices")}
+      >
+        Invoices
+      </button>
+
+      <button
+        className={activeMenu === "bookings" ? "nav active" : "nav"}
+        onClick={() => setActiveMenu("bookings")}
+      >
+        Bookings
+      </button>
+
+      <button
+        className="logout-btn"
+        onClick={logout}
+      >
+        Logout
+      </button>
+    </aside>
+
+    <div className="dashboard-content">
+
+      <header className="dashboard-header">
+        <h1>Admin Dashboard</h1>
+      </header>
+
       {message && <p className="notice">{message}</p>}
-      {error && <p className="error">{error}</p>}
-      <section className="grid two">
-        <Panel icon={<UserPlus />} title="Add Client Company">
-          <form onSubmit={createCompany} className="form-grid">
-            <input placeholder="Company name" value={companyForm.name} onChange={(e) => setCompanyForm({ ...companyForm, name: e.target.value })} required />
-            <input placeholder="Owner name" value={companyForm.ownerName} onChange={(e) => setCompanyForm({ ...companyForm, ownerName: e.target.value })} required />
-            <input placeholder="Login email" type="email" value={companyForm.email} onChange={(e) => setCompanyForm({ ...companyForm, email: e.target.value })} required />
-            <input placeholder="Seats" type="number" value={companyForm.seatCount} onChange={(e) => setCompanyForm({ ...companyForm, seatCount: e.target.value })} required />
-            <button><Plus size={16} /> Create company</button>
-          </form>
-        </Panel>
-        <Panel icon={<CreditCard />} title="Generate Invoice">
-          <form onSubmit={generateInvoice} className="form-grid">
-            <select value={invoiceForm.companyId} onChange={(e) => setInvoiceForm({ ...invoiceForm, companyId: e.target.value })} required>
-              <option value="">Select company to bill</option>
-              {companies.map((c) => <option key={c.id} value={c.id}>{c.name} - {c.email} - {c.seatCount} seats</option>)}
-            </select>
-            {selectedCompany && (
-              <div className="summary-box">
-                <span>Invoice receiver</span>
-                <b>{selectedCompany.email}</b>
-                <span>Amount: INR {(selectedCompany.seatCount * 11000).toLocaleString("en-IN")} ({selectedCompany.seatCount} seats x 11,000)</span>
-              </div>
-            )}
-            <input type="date" value={invoiceForm.billingMonth} onChange={(e) => setInvoiceForm({ ...invoiceForm, billingMonth: e.target.value })} />
-            <input type="date" value={invoiceForm.dueDate} onChange={(e) => setInvoiceForm({ ...invoiceForm, dueDate: e.target.value })} required />
-            <label className="check"><input type="checkbox" checked={invoiceForm.sendNow} onChange={(e) => setInvoiceForm({ ...invoiceForm, sendNow: e.target.checked })} /> Send now</label>
-            <button disabled={!companies.length}><Send size={16} /> Generate</button>
-          </form>
-        </Panel>
-      </section>
-      <Data title="Invoices" rows={invoices} action={markPaid} />
-      <Data title="Companies" rows={companies} />
-      <Data title="Users" rows={users} />
-      <Data title="Recent Bookings" rows={bookings} />
-    </Shell>
-  );
+{error && <p className="error">{error}</p>}
+
+{/* DASHBOARD */}
+{activeMenu === "dashboard" && (
+  <>
+    <div className="stats">
+      <Metric label="Companies" value={stats.companies || 0} />
+      <Metric label="Paid bills" value={stats.paidBills || 0} />
+      <Metric label="Pending bills" value={stats.pendingBills || 0} />
+      <Metric label="Bookings" value={stats.totalBookings || 0} />
+    </div>
+  </>
+)}
+
+{/* COMPANIES */}
+{activeMenu === "companies" && (
+  <>
+    <Panel icon={<UserPlus />} title="Add Client Company">
+      <form onSubmit={createCompany} className="form-grid">
+
+        <input
+          placeholder="Company name"
+          value={companyForm.name}
+          onChange={(e) =>
+            setCompanyForm({
+              ...companyForm,
+              name: e.target.value
+            })
+          }
+          required
+        />
+
+        <input
+          placeholder="Owner name"
+          value={companyForm.ownerName}
+          onChange={(e) =>
+            setCompanyForm({
+              ...companyForm,
+              ownerName: e.target.value
+            })
+          }
+          required
+        />
+
+        <input
+          placeholder="Login email"
+          type="email"
+          value={companyForm.email}
+          onChange={(e) =>
+            setCompanyForm({
+              ...companyForm,
+              email: e.target.value
+            })
+          }
+          required
+        />
+
+        <input
+          placeholder="Seats"
+          type="number"
+          value={companyForm.seatCount}
+          onChange={(e) =>
+            setCompanyForm({
+              ...companyForm,
+              seatCount: e.target.value
+            })
+          }
+          required
+        />
+
+        <button>
+          <Plus size={16} />
+          Create Company
+        </button>
+
+      </form>
+    </Panel>
+
+    <Data
+      title="Companies"
+      rows={companies}
+    />
+  </>
+)}
+
+{/* INVOICES */}
+{activeMenu === "invoices" && (
+  <>
+    <Panel icon={<CreditCard />} title="Generate Invoice">
+
+      <form onSubmit={generateInvoice} className="form-grid">
+
+        <select
+          value={invoiceForm.companyId}
+          onChange={(e) =>
+            setInvoiceForm({
+              ...invoiceForm,
+              companyId: e.target.value
+            })
+          }
+          required
+        >
+          <option value="">Select company to bill</option>
+
+          {companies.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name} - {c.email}
+            </option>
+          ))}
+        </select>
+
+        {selectedCompany && (
+          <div className="summary-box">
+            <span>Invoice receiver</span>
+            <b>{selectedCompany.email}</b>
+
+            <span>
+              Amount: INR{" "}
+              {(selectedCompany.seatCount * 11000).toLocaleString("en-IN")}
+            </span>
+          </div>
+        )}
+
+        <input
+          type="date"
+          value={invoiceForm.billingMonth}
+          onChange={(e) =>
+            setInvoiceForm({
+              ...invoiceForm,
+              billingMonth: e.target.value
+            })
+          }
+        />
+
+        <input
+          type="date"
+          value={invoiceForm.dueDate}
+          onChange={(e) =>
+            setInvoiceForm({
+              ...invoiceForm,
+              dueDate: e.target.value
+            })
+          }
+          required
+        />
+
+        <label className="check">
+          <input
+            type="checkbox"
+            checked={invoiceForm.sendNow}
+            onChange={(e) =>
+              setInvoiceForm({
+                ...invoiceForm,
+                sendNow: e.target.checked
+              })
+            }
+          />
+          Send now
+        </label>
+
+        <button disabled={!companies.length}>
+          <Send size={16} />
+          Generate
+        </button>
+
+      </form>
+
+    </Panel>
+
+    <Data
+      title="Invoice History"
+      rows={invoices}
+      action={markPaid}
+    />
+  </>
+)}
+
+{/* BOOKINGS */}
+{activeMenu === "bookings" && (
+  <>
+    <Data
+      title="Booking History"
+      rows={bookings}
+    />
+  </>
+)}
+
+    </div>
+
+  </div>
+);
 }
 
 function ClientDashboard({ logout }) {
@@ -202,6 +403,7 @@ function ClientDashboard({ logout }) {
   const [bookings, setBookings] = React.useState([]);
   const [invoices, setInvoices] = React.useState([]);
   const [passes, setPasses] = React.useState([]);
+  const [activeMenu, setActiveMenu] = React.useState("dashboard");
   const [passForm, setPassForm] = React.useState({
   visitorName: "",
   visitorEmail: "",
@@ -307,99 +509,307 @@ const visibleSlots = slots.map((slot) => {
   };
 
   return (
-    <Shell title="Client Dashboard" logout={logout}>
+  <div className="dashboard-layout">
+
+    {/* Sidebar */}
+    <aside className="sidebar">
+
+      <div className="brand">
+        <Building2 />
+        <span>Workafella</span>
+      </div>
+
+      <button
+        className={activeMenu === "dashboard" ? "nav active" : "nav"}
+        onClick={() => setActiveMenu("dashboard")}
+      >
+        Dashboard
+      </button>
+
+      <button
+        className={activeMenu === "roomBooking" ? "nav active" : "nav"}
+        onClick={() => setActiveMenu("roomBooking")}
+      >
+        Room Booking
+      </button>
+
+      <button
+        className={activeMenu === "gatePass" ? "nav active" : "nav"}
+        onClick={() => setActiveMenu("gatePass")}
+      >
+        Gate Pass
+      </button>
+
+      <button
+        className={activeMenu === "bookings" ? "nav active" : "nav"}
+        onClick={() => setActiveMenu("bookings")}
+      >
+        My Bookings
+      </button>
+
+      <button
+        className={activeMenu === "invoices" ? "nav active" : "nav"}
+        onClick={() => setActiveMenu("invoices")}
+      >
+        Invoices
+      </button>
+
+      <button className="logout-btn" onClick={logout}>
+        Logout
+      </button>
+
+    </aside>
+
+    {/* Main Content */}
+    <div className="dashboard-content">
+
+      <header className="dashboard-header">
+        <h1>Client Dashboard</h1>
+      </header>
+
       {message && <p className="notice">{message}</p>}
       {error && <p className="error">{error}</p>}
-      <section className="grid two">
-        <Panel icon={<CalendarDays />} title="Book Conference Room">
-          <div className="toolbar">
-            <select value={roomId} onChange={(e) => setRoomId(e.target.value)}>{rooms.map((r) => <option key={r.id} value={r.id}>{r.capacity} seater room</option>)}</select>
-            <input type="date" min={today()} value={date} onChange={(e) => setDate(e.target.value < today() ? today() : e.target.value)} />
+
+      {/* DASHBOARD */}
+      {activeMenu === "dashboard" && (
+        <>
+          <div className="stats">
+
+            <Metric
+              label="Active Bookings"
+              value={bookings.length}
+            />
+
+            <Metric
+              label="Visitor Passes"
+              value={passes.length}
+            />
+
+            <Metric
+              label="Invoices"
+              value={invoices.length}
+            />
+
+            <Metric
+              label="Hours Remaining"
+              value={usage?.remainingThisMonth || 0}
+            />
+
           </div>
+
+          <div className="welcome-card">
+            <h2>Welcome to Workafella</h2>
+            <p>
+              Manage room bookings, visitor passes,
+              invoices and workspace activities.
+            </p>
+          </div>
+        </>
+      )}
+
+      {/* ROOM BOOKING */}
+      {activeMenu === "roomBooking" && (
+        <Panel
+          icon={<CalendarDays />}
+          title="Book Conference Room"
+        >
+
+          <div className="toolbar">
+
+            <select
+              value={roomId}
+              onChange={(e) => setRoomId(e.target.value)}
+            >
+              {rooms.map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.capacity} seater room
+                </option>
+              ))}
+            </select>
+
+            <input
+              type="date"
+              min={today()}
+              value={date}
+              onChange={(e) =>
+                setDate(
+                  e.target.value < today()
+                    ? today()
+                    : e.target.value
+                )
+              }
+            />
+
+          </div>
+
           {usage && (
             <div className="usage-strip">
               <span>{usage.capacity} seater monthly usage</span>
               <b>{usage.remainingThisMonth} hours remaining</b>
-              <span>{usage.usedThisMonth} used / {usage.monthlyLimit} allowed</span>
+              <span>
+                {usage.usedThisMonth} used /
+                {usage.monthlyLimit} allowed
+              </span>
             </div>
           )}
+
           <div className="slots">
-  {slots.map((s) => {
-    const currentHour = new Date().getHours();
-    const slotHour = Number(s.startTime.split(":")[0]);
+            {slots.map((s) => {
+              const currentHour =
+                new Date().getHours();
 
-    const pastTime =
-      date === today() &&
-      slotHour <= currentHour;
+              const slotHour =
+                Number(
+                  s.startTime.split(":")[0]
+                );
 
-    const disabled = !s.free || pastTime;
+              const pastTime =
+                date === today() &&
+                slotHour <= currentHour;
 
-    return (
-      <button
-        key={s.startTime}
-        disabled={disabled}
-        className={disabled ? "slot booked" : "slot free"}
-        onClick={() => book(s)}
-      >
-        {formatTime(s.startTime)} - {formatTime(s.endTime)}
-        <span>
-          {pastTime
-            ? "Expired"
-            : s.free
-            ? "Free"
-            : "Booked"}
-        </span>
-      </button>
-    );
-  })}
-</div>
+              const disabled =
+                !s.free || pastTime;
+
+              return (
+                <button
+                  key={s.startTime}
+                  disabled={disabled}
+                  className={
+                    disabled
+                      ? "slot booked"
+                      : "slot free"
+                  }
+                  onClick={() => book(s)}
+                >
+                  {formatTime(s.startTime)}
+                  {" - "}
+                  {formatTime(s.endTime)}
+
+                  <span>
+                    {pastTime
+                      ? "Expired"
+                      : s.free
+                      ? "Free"
+                      : "Booked"}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
         </Panel>
-        <Panel icon={<Mail />} title="Generate Visitor Gate Pass">
-          <form onSubmit={generatePass} className="form-grid">
-            <input placeholder="Visitor name" value={passForm.visitorName} onChange={(e) => setPassForm({ ...passForm, visitorName: e.target.value })} required />
-            <input placeholder="Visitor email" type="email" value={passForm.visitorEmail} onChange={(e) => setPassForm({ ...passForm, visitorEmail: e.target.value })} required />
-            <input
-  placeholder="Host Name"
-  value={passForm.hostName}
-  onChange={(e) =>
-    setPassForm({
-      ...passForm,
-      hostName: e.target.value
-    })
-  }
-  required
-/>
+      )}
 
-<input
-  placeholder="Purpose"
-  value={passForm.purpose}
-  onChange={(e) =>
-    setPassForm({
-      ...passForm,
-      purpose: e.target.value
-    })
-  }
-  required
-/>
-            <input type="date" min={today()} value={passForm.visitingDate} onChange={(e) => setPassForm({ ...passForm, visitingDate: e.target.value < today() ? today() : e.target.value })} />
-            <select value={passForm.entryTime} onChange={(e) => setPassForm({ ...passForm, entryTime: e.target.value })}>
-              {timeOptions.slice(0, -1).map((t) => <option key={t} value={t}>{formatTime(t)}</option>)}
-            </select>
-            <select value={passForm.exitTime} onChange={(e) => setPassForm({ ...passForm, exitTime: e.target.value })}>
-              {timeOptions.slice(1).map((t) => <option key={t} value={t}>{formatTime(t)}</option>)}
-            </select>
-            <button><Send size={16} /> Generate pass</button>
-          </form>
-        </Panel>
-      </section>
-      <Data title="Bill Progress & History" rows={invoices} />
-      <BookingTable
-  rows={bookings}
-  onCancel={cancelBooking}
-/>
-      <Data title="Visitor Passes" rows={passes} />
-    </Shell>
-  );
+      {/* GATE PASS */}
+      {activeMenu === "gatePass" && (
+        <>
+          <Panel
+            icon={<Mail />}
+            title="Generate Visitor Gate Pass"
+          >
+
+            <form
+              onSubmit={generatePass}
+              className="form-grid"
+            >
+
+              <input
+                placeholder="Visitor name"
+                value={passForm.visitorName}
+                onChange={(e) =>
+                  setPassForm({
+                    ...passForm,
+                    visitorName: e.target.value
+                  })
+                }
+                required
+              />
+
+              <input
+                placeholder="Visitor email"
+                type="email"
+                value={passForm.visitorEmail}
+                onChange={(e) =>
+                  setPassForm({
+                    ...passForm,
+                    visitorEmail: e.target.value
+                  })
+                }
+                required
+              />
+
+              <input
+                placeholder="Host Name"
+                value={passForm.hostName}
+                onChange={(e) =>
+                  setPassForm({
+                    ...passForm,
+                    hostName: e.target.value
+                  })
+                }
+                required
+              />
+
+              <input
+                placeholder="Purpose"
+                value={passForm.purpose}
+                onChange={(e) =>
+                  setPassForm({
+                    ...passForm,
+                    purpose: e.target.value
+                  })
+                }
+                required
+              />
+
+              <input
+                type="date"
+                min={today()}
+                value={passForm.visitingDate}
+                onChange={(e) =>
+                  setPassForm({
+                    ...passForm,
+                    visitingDate: e.target.value
+                  })
+                }
+              />
+
+              <button>
+                <Send size={16} />
+                Generate Pass
+              </button>
+
+            </form>
+
+          </Panel>
+
+          <Data
+            title="Visitor History"
+            rows={passes}
+          />
+        </>
+      )}
+
+      {/* BOOKINGS */}
+      {activeMenu === "bookings" && (
+        <BookingTable
+          rows={bookings}
+          onCancel={cancelBooking}
+        />
+      )}
+
+      {/* INVOICES */}
+      {activeMenu === "invoices" && (
+        <Data
+          title="Invoice History"
+          rows={invoices}
+        />
+      )}
+
+    </div>
+
+  </div>
+);
 }
 
 function Metric({ label, value }) { return <div className="metric"><b>{value}</b><span>{label}</span></div>; }
