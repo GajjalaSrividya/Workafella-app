@@ -202,7 +202,15 @@ function ClientDashboard({ logout }) {
   const [bookings, setBookings] = React.useState([]);
   const [invoices, setInvoices] = React.useState([]);
   const [passes, setPasses] = React.useState([]);
-  const [passForm, setPassForm] = React.useState({ visitorName: "", visitorEmail: "", visitingDate: date, entryTime: "09:00", exitTime: "18:00" });
+  const [passForm, setPassForm] = React.useState({
+  visitorName: "",
+  visitorEmail: "",
+  hostName: "",
+  purpose: "",
+  visitingDate: date,
+  entryTime: "09:00",
+  exitTime: "18:00"
+});
   const [message, setMessage] = React.useState("");
   const [error, setError] = React.useState("");
   const currentHour = new Date().getHours();
@@ -282,8 +290,16 @@ const visibleSlots = slots.map((slot) => {
     setError("");
     try {
       await request("/client/gatepasses", { method: "POST", body: JSON.stringify(passForm) });
-      setMessage(`Gate pass generated and sent automatically to ${passForm.visitorEmail}.`);
-      setPassForm({ visitorName: "", visitorEmail: "", visitingDate: date, entryTime: "09:00", exitTime: "18:00" });
+      setMessage(`Gate pass generated and sent to ${passForm.visitorEmail}.`);
+      setPassForm({
+  visitorName: "",
+  visitorEmail: "",
+  hostName: "",
+  purpose: "",
+  visitingDate: date,
+  entryTime: "09:00",
+  exitTime: "18:00"
+});
       load();
     } catch (err) {
       setError(err.message);
@@ -341,7 +357,30 @@ const visibleSlots = slots.map((slot) => {
         <Panel icon={<Mail />} title="Generate Visitor Gate Pass">
           <form onSubmit={generatePass} className="form-grid">
             <input placeholder="Visitor name" value={passForm.visitorName} onChange={(e) => setPassForm({ ...passForm, visitorName: e.target.value })} required />
-            <input placeholder="Visitor email - pass is sent automatically" type="email" value={passForm.visitorEmail} onChange={(e) => setPassForm({ ...passForm, visitorEmail: e.target.value })} required />
+            <input placeholder="Visitor email" type="email" value={passForm.visitorEmail} onChange={(e) => setPassForm({ ...passForm, visitorEmail: e.target.value })} required />
+            <input
+  placeholder="Host Name"
+  value={passForm.hostName}
+  onChange={(e) =>
+    setPassForm({
+      ...passForm,
+      hostName: e.target.value
+    })
+  }
+  required
+/>
+
+<input
+  placeholder="Purpose"
+  value={passForm.purpose}
+  onChange={(e) =>
+    setPassForm({
+      ...passForm,
+      purpose: e.target.value
+    })
+  }
+  required
+/>
             <input type="date" min={today()} value={passForm.visitingDate} onChange={(e) => setPassForm({ ...passForm, visitingDate: e.target.value < today() ? today() : e.target.value })} />
             <select value={passForm.entryTime} onChange={(e) => setPassForm({ ...passForm, entryTime: e.target.value })}>
               {timeOptions.slice(0, -1).map((t) => <option key={t} value={t}>{formatTime(t)}</option>)}
