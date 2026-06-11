@@ -34,9 +34,12 @@ CREATE TABLE bookings (
     start_time TIME NOT NULL,
     end_time TIME NOT NULL,
     status VARCHAR(30) NOT NULL CHECK (status IN ('BOOKED','CANCELLED')),
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT uq_active_room_slot UNIQUE (room_id, booking_date, start_time, status)
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE UNIQUE INDEX uq_active_room_slot
+ON bookings(room_id, booking_date, start_time)
+WHERE status = 'BOOKED';
 
 CREATE TABLE invoices (
     id BIGSERIAL PRIMARY KEY,
@@ -65,13 +68,22 @@ CREATE TABLE gate_passes (
     id BIGSERIAL PRIMARY KEY,
     company_id BIGINT NOT NULL REFERENCES companies(id),
     created_by BIGINT NOT NULL REFERENCES users(id),
+
     visitor_name VARCHAR(160) NOT NULL,
     visitor_email VARCHAR(180) NOT NULL,
+
+    host_name VARCHAR(160),
+    purpose VARCHAR(500),
+
     visiting_date DATE NOT NULL,
     entry_time TIME NOT NULL,
     exit_time TIME NOT NULL,
+
     pass_code VARCHAR(80) NOT NULL UNIQUE,
-    status VARCHAR(30) NOT NULL CHECK (status IN ('GENERATED','CANCELLED')),
+
+    status VARCHAR(30) NOT NULL
+        CHECK (status IN ('GENERATED','CANCELLED')),
+
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
