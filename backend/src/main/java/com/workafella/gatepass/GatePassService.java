@@ -113,10 +113,26 @@ public class GatePassService {
                             border-radius:12px;
                             padding:25px;
                             border:1px solid #ddd;'>
+                 <div style='text-align:center;margin-bottom:20px;'>
 
-                    <h2 style='color:#0d6efd;text-align:center;'>
-                        WORKAFELLA VISITOR PASS
-                    </h2>
+    <img
+        src='cid:workafellaLogo'
+        alt='Workafella'
+        style='width:160px;'>
+
+</div>
+                    <div style="
+background:#FAC50F;
+color:white;
+font-size:20px;
+font-weight:bold;
+text-align:center;
+padding:15px;
+border-radius:18px;
+margin-top:10px;
+margin-bottom:20px;">
+VISITOR PASS
+</div>
 
                     <hr>
 

@@ -7,7 +7,7 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
-
+import org.springframework.core.io.ClassPathResource;
 @Service
 public class MailService {
 
@@ -45,36 +45,46 @@ public class MailService {
         }
     }
 
-    public void sendHtml(String to,
-                         String subject,
-                         String htmlBody) {
+  public void sendHtml(String to,
+                     String subject,
+                     String htmlBody) {
 
-        try {
+    try {
 
-            MimeMessage message =
-                    mailSender.createMimeMessage();
+        MimeMessage message =
+                mailSender.createMimeMessage();
 
-            MimeMessageHelper helper =
-                    new MimeMessageHelper(
-                            message,
-                            true,
-                            "UTF-8"
-                    );
+        MimeMessageHelper helper =
+                new MimeMessageHelper(
+                        message,
+                        true,
+                        "UTF-8"
+                );
 
-            helper.setTo(to);
-            helper.setSubject(subject);
+        helper.setTo(to);
+        helper.setSubject(subject);
 
-            helper.setText(htmlBody, true);
+        helper.setText(htmlBody, true);
 
-            mailSender.send(message);
+        ClassPathResource logo =
+                new ClassPathResource(
+                        "static/workafellaBG.png"
+                );
 
-        } catch (Exception ex) {
+        helper.addInline(
+                "workafellaLogo",
+                logo
+        );
 
-            log.error(
-                    "Failed to send HTML mail to {}",
-                    to,
-                    ex
-            );
-        }
+        mailSender.send(message);
+
+    } catch (Exception ex) {
+
+        log.error(
+                "Failed to send HTML mail to {}",
+                to,
+                ex
+        );
     }
+}
 }

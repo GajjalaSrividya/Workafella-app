@@ -773,6 +773,31 @@ const visibleSlots = slots.map((slot) => {
                   })
                 }
               />
+              <div style={{display:"grid", gridTemplateColumns:"1fr 1fr", gap:"12px"}}>
+  <input
+    type="time"
+    value={passForm.entryTime}
+    onChange={(e) =>
+      setPassForm({
+        ...passForm,
+        entryTime: e.target.value
+      })
+    }
+    required
+  />
+
+  <input
+    type="time"
+    value={passForm.exitTime}
+    onChange={(e) =>
+      setPassForm({
+        ...passForm,
+        exitTime: e.target.value
+      })
+    }
+    required
+  />
+</div>
 
               <button>
                 <Send size={16} />
